@@ -1,0 +1,92 @@
+		TI AM62A7 SK EVM Support Package
+
+
+Table of Contents
+=================
+
+1. Supported Boards
+2. Change History
+3. BSP Features
+4. BSP Notes
+
+
+1. Supported Boards
+===================
+
+This BSP supports the following boards:
+
+  + TI AM62A7 SK EVM: Board: AM62A7 SK rev E3
+                        SOC: AM62AX SR1.0 HS-FS
+
+
+2. Change History
+=================
+
+  - 2024/02 (LINUXPG-1989): Wind River Linux 10.23 RCPL7, Standard and Preempt-rt support based on
+			    TI SDK ti-processor-sdk-linux-edgeai-am62axx-evm-09_01_00_07
+
+3. BSP Features
+===============
+
+3.1 Supported Features
+----------------------
+
+The following BSP features are validated and supported on boards where
+the corresponding h/w features exist.
+
+  o Bus
+	+ I2C: High-Speed (HS) Inter-Integrated Circuit (I2C) controllers
+	+ OSPI/QSPI: Serial Peripheral Interface
+	+ USB2.0 Type C: 1x Interface, support DFP, DRP, UFP modes
+	+ USB2.0 Host: 1x Interface for external cables, Type A
+
+  o Network
+	+ CPSW Ethernet: 2x RGMII
+
+  o Storage
+	+ EMMC: 	16 GB memory MTFC16GAPALBH-IT
+	+ SD/MMC: 	MicroSD Card Cage, UHS-I
+	+ OSPI Flash: 	1Gbit Octal SPI Nand Flash memory
+	+ EEPROM:       Inter-Integrated Circuit (I2C) EEPROM
+
+  o Multimedia
+	+ HDMI: 1x HDMI Interface
+	+ Audio: TI‘s TLV320AIC3106 Stereo Audio Codec
+	+ Video: Decoder & Encoder
+
+  o Power Mgmt
+	+ Suspend to RAM
+	+ CPU Idle
+	+ CPU Freq
+
+  o Misc Devices
+	+ UART: 1x USB FTDI (UART-over-USB)
+	+ GPIO: The General-Purpose Input Output
+	+ Crypto: Crypto acceleration support for AES, SHA256, SHA512 and RNG
+	+ IPC: Communication between A53 and C75, R5F cores
+	+ Thermal: Thermal Management Unit (TMU)
+
+3.2 Unsupported Features
+------------------------
+
+The following features are not supported and not validated:
+	x Camera: 22 Pin Camera flex connector
+	x Watchdog: K3 RTI Watchdog
+	x M.2 Key E interface: support for both Wi-Fi and Bluetooth modules
+
+4. BSP Notes
+============
+
+4.1 TI AM62A7 SK EVM
+--------------------
+
+4.1.1 Validated Board Info
+--------------------------
+
+This BSP is only validated in following environment. If you use this BSP
+in a different environment it may possibly have some issues.
+
+	Processor:		AM62AX SR1.0 HS-FS
+	Board:		        Texas Instruments AM62A7 SK
+	BootLoader:		U-Boot
+	BootLoader Version:	U-Boot 2023.04-gb0d717b732 (Dec 06 2023 - 15:11:45 +0000)

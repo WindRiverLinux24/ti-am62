@@ -1,0 +1,334 @@
+			TI AM62A7 SK EVM Board
+
+
+1. About this document
+======================
+This document describes the common and non-hardware specific information.
+Please refer to README.hardware for hardware specific information.
+
+Dependencies
+------------
+This layer depends on the oe-core version supplied with Wind River Linux
+and the wr-kernel layer.
+
+
+Maintenance
+-----------
+This layer is maintained by Wind River Systems, Inc.
+Contact <support@windriver.com> or your support representative for more
+information on submitting changes.
+
+
+Building the ti-am62 layer
+--------------------------
+This layer and wr-kernel layer should be added to bblayers.conf. This
+is done automatically when using the Wind River configure wrapper.
+
+
+License
+-------
+Copyright (C) 2024 Wind River Systems, Inc.
+
+Source code included in the tree for individual recipes is under the LICENSE
+stated in the associated recipe (.bb file) unless otherwise stated.
+
+The metadata is under the following license unless otherwise stated.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+2. BSP Kernel and Distros
+=========================
+
+The following table summarizes the valid Wind River Linux distros for this BSP.
+'Y' in each content cell stands for supported; 'N' stands for not supported:
+
+  +--------------+-------------+------------------+-------------------+--------------+
+  | valid/distro |   wrlinux   | wrlinux-graphics | wrlinux-installer | wrlinux-tiny |
+  +--------------+-------------+------------------+-------------------+--------------+
+  |    valid     |      Y      |        Y         |         N         |       N      |
+  +--------------+-------------+------------------+-------------------+--------------+
+
+For the supported kernel type for this BSP, please check the TARGET_SUPPORTED_KTYPES
+by running 'bitbake -e virtual/kernel | grep "^TARGET_SUPPORTED_KTYPES="'.
+
+Note: The preempt-rt ktype is available for this BSP/Machine at this time.
+
+
+3. Board Specific Patches
+=========================
+
+To get a list of patches applied to the kernel specific to this BSP along with
+patch descriptions use git-whatchanged on the default kernel. For example:
+
+	%> cd tmp-glibc/work-shared/<bsp_name>/kernel-source
+	%> git whatchanged <kernel_version>/standard/base..<kernel_version>/standard/<bsp_name>
+
+
+4. Boot Instructions
+====================
+
+The typical u-boot settings apply to these boards. You will need to use
+setenv, printenv and saveenv, to configure, display and store respectively
+your network configuration details and kernel command line. In order to
+TFTP a kernel, you need at a minimum to set the following:
+
+	- ipaddr
+	- gatewayip
+	- netmask
+	- serverip
+	- loadaddr
+	- dtbfile
+	- dtbaddr
+	- ethaddr
+
+Your board may ship with the values for the MAC address of
+the Ethernet interfaces set to the defaults compiled into the
+u-boot image.  You should set the ethaddr, eth1addr and so on
+as per the manufacturer assigned values, usually indicated with
+a sticker on the board.
+
+Target specifics are usually set in the "bootargs" variable, and the
+kernel image is set in the "bootfile" variable. Don't forget that if you
+want these values to be available after a power cycle you will need to run
+the saveenv command.
+
+Typically convenience macros exist that will create a complete bootargs
+command line for the kernel based on variables that contain individual
+settings.  Since these macros exist as env variables themselves, they
+may or may not be present depending on who installed and configured
+u-boot for the board.
+
+The console device for the board is ttyLF0 at 115200 baud. For the DTB
+address, 0x88000000 was used with success by Wind River. The load address
+must be high enough to not interfere with kernel decompression. A value
+of 0x82000000 was used with success for all kernels tested by Wind River.
+
+4.1 NFS Root File System
+------------------------
+
+Example settings for the monitor (u-boot) are shown below:
+
+nfsboot=setenv bootargs root=/dev/nfs rw nfsroot=$serverip:$rootpath \
+ip=$ipaddr:$serverip:$gatewayip:$netmask:$hostname:$netdev:off \
+console=$consoledev,$baudrate earlycon=ns16550a,mmio32,0x02800000;tftp $loadaddr $bootfile; \
+tftp $fdtaddr $fdtfile;booti $loadaddr - $fdtaddr
+ethaddr=00:04:9F:02:00:FD
+loadaddr=0x82000000
+fdtaddr=0x88000000
+gatewayip=192.168.1.1
+netmask=255.255.255.0
+ipaddr=192.168.1.100
+serverip=192.168.1.2
+netdev=eth0
+bootfile=Image
+fdtfile=k3-am62a7-sk.dtb
+rootpath=/tftpboot/rootfs
+consoledev=ttyS2
+baudrate=115200
+
+5. Creating Partitioned Images(WIC)
+===================================
+
+User can use the OpenEmbedded Image Creator to create the properly partitioned
+image on a SD card. It generates partitioned images from existing OpenEmbedded
+build artifacts. Please refer to the following URL for more detailed partition
+information about WIC:
+
+https://docs.yoctoproject.org/singleindex.html#creating-partitioned-images-using-wic
+
+5.1 Build WIC image within tiboot3.bin & tispl.bin in boot partition
+--------------------------------------------------------------------
+
+tiboot3.bin & tispl.bin are the firmwares of TI's MCU. Because of license issue,
+they aren't integrated into WRLinux.
+
+the installation file "ti-processor-sdk-linux-edgeai-am62axx-evm-09_01_00_07-Linux-x86-Install.bin"
+includes the two firmwares, the installation file can be downloaded from website:
+https://www.ti.com/tool/download/PROCESSOR-SDK-LINUX-AM62A
+
+And then add one line below to local.conf:
+
+IMAGE_BOOT_FILES:append = " <path-to-tiboot3.bin>/tiboot3.bin;tiboot3.bin <path-to-tispl.bin>/tispl.bin;tispl.bin"
+
+After having built your project, a partitioned WIC image will be created in the
+deploy folder as follows:
+
+  path_to_your_project/build/tmp-glibc/deploy/images/ti-am62/wrlinux-image-<rootfs_type>-ti-am62.wic
+
+There are two partitions in this WIC images, the first one is to hold the boot
+images, the second is the related root file system.
+
+5.2 Deploy the created WIC image
+--------------------------------
+
+Deploy the created WIC image into SD card(/dev/sdx) in your host machine.
+
+   $ sudo dd if=wrlinux-image-<rootfs_type>-<machine>.wic of=/dev/sdx
+
+5.3 Boot the board from the WIC SD card
+---------------------------------------
+
+Insert the SD card into the board and select this SD card as the boot device.
+
+You have two ways to start the board:
+
+1. Use the uboot’s default startup environment variables.
+
+2. By set the below uboot environment variables:
+   $ setenv bootargs console=ttyS2,115200n8 earlycon=ns16550a,mmio32,0x02800000 root=/dev/mmcblk1p2 rw rootwait ip=dhcp
+   $ fatload mmc 1:1 0x82000000 Image; fatload mmc 1:1 0x88000000 k3-am62a7-sk.dtb; booti 0x82000000 - 0x88000000
+
+
+6. Features
+===========
+
+Before using the features below, it is recommended that you first add
+WRTEMPLATE to your build local.conf to add series tools (Such as: can/audio/ufs).
+
+Simply add line as follows to ${buildprj}/build/conf/local.conf:
+	WRTEMPLATE = "feature/bsp-extras"
+
+And it is recommended to refer to the "Foundational Components" of the sdk
+release note "Processor SDK Linux for AM62A" from the TI web.
+
+6.1 Audio
+---------
+
+6.1.1 Usage and verification
+----------------------------
+
+        # aplay -Dplughw:0,0 <path to wav file>
+
+6.2 PM suspend
+--------------
+
+6.2.1 Usage and verification
+----------------------------
+
+        # rtcwake -s 10 -m mem -d rtc1
+
+6.3 PM cpufreq
+--------------
+
+6.3.1 Usage and verification
+----------------------------
+
+  cpufreq:
+
+    # cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_governors
+    conservative ondemand userspace powersave performance schedutil
+    # cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+    1250000
+    # cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_available_frequencies
+    200000 400000 600000 800000 1000000 1250000
+    # echo userspace > /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+    # echo 200000 > /sys/devices/system/cpu/cpu0/cpufreq/scaling_setspeed
+    # cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq
+    200000
+
+6.4 USB
+-------
+
+6.4.1 Usage and verification
+----------------------------
+
+Host mode is OK as-is, the following example for device mode:
+        # modprobe g_multi "file=/dev/mmcblk0p1"
+
+6.5 IPC
+-------
+
+6.5.1 Usage and verification
+----------------------------
+
+root@ti-am62:~# rpmsg_char_simple -r0 -n5
+Created endpt device rpmsg-char-0-428, fd = 4 port = 1026
+Exchanging 5 messages with rpmsg device ti.ipc4.ping-pong on rproc id 0 ...
+
+Sending message #0: hello there 0!
+Receiving message #0: hello there 0!
+Sending message #1: hello there 1!
+Receiving message #1: hello there 1!
+Sending message #2: hello there 2!
+Receiving message #2: hello there 2!
+Sending message #3: hello there 3!
+Receiving message #3: hello there 3!
+Sending message #4: hello there 4!
+Receiving message #4: hello there 4!
+
+Communicated 5 messages successfully on rpmsg-char-0-428
+
+TEST STATUS: PASSED
+
+
+6.6 Video
+---------
+
+The Encoder/Decoder (VENC/VDEC) is a stateful encoder/decoder, it is found on
+the AM62Ax SoC. Combined H.264 and H.265 encoder/decoder used in the Texas 
+Instruments AM62Ax SoC.
+
+The Linux Kernel Drivers has integrated the Video Decoder and Encoder as module by default.
+Because of the license issue, you can manually build the Image as below to
+integrate the gstreamer related packages:
+
+6.6.1 Build Image
+-----------------
+
+  1) set BB_NO_NETWORK as '0' in ${buildprj}/build/conf/local.conf file.
+
+  2) Add line as follows to ${buildprj}/build/conf/local.conf:
+     $ cat << _EOF >> conf/local.conf
+CUSTOMER_RECIPES:openembedded-layer += 'faad2'
+LICENSE_FLAGS_ACCEPTED += "commercial"
+IMAGE_INSTALL:append:ti-am62 = ' gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-libav'
+_EOF
+
+  3) bitbake wrlinux-image-xxx
+
+6.6.2 Verify Multimedia feature
+-------------------------------
+
+An example to test with GStreamer Pipelines on target board:
+	$ gst-launch-1.0 filesrc location=/<path_to_file>  ! rawvideoparse width=1920 height=1080 format=i420 framerate=30/1 colorimetry=bt709 ! v4l2h264enc ! filesink location=/<path_to_file>  sync=true
+
+6.7 Build U-Boot
+----------------
+
+By default, the u-boot image is compiled and installed. If you want u-boot to be manually
+compiled separately, use the following command：
+
+	# bitbake u-boot-ti-staging
+
+6.8 CPSW Ethernet
+-----------------
+
+By default, the CPSW Eth0 is enabled and Eth1 is not enabled. Need to install
+corresponding dtbo file to enable Eth1 port, in addition to other environment variables,
+the following environment variables need to be set additionally at uboot to apply dtbo files:
+
+1. Boot from NFS:
+        => tftpboot 0x82000000 Image; tftpboot 0x88000000 dtb
+	=> fdt address 0x88000000; fdt resize 0x100000; tftpboot 0x89000000 k3-am62a7-sk-ethernet-dc01.dtbo;fdt apply 0x89000000;
+        => booti 0x82000000 - 0x88000000
+
+2. Boot from WIC:
+ Just modify the uEnv.txt to add with below:
+	name_overlays=k3-am62a7-sk-ethernet-dc01.dtbo
+	
