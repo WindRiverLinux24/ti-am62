@@ -29,4 +29,5 @@ do_deploy() {
 }
 addtask deploy before do_build after do_unpack
 
-COMPATIBLE_MACHINE:ti-62 = "ti-am62"
+COMPATIBLE_MACHINE = "^$"
+COMPATIBLE_MACHINE:ti-am62 = "ti-am62"

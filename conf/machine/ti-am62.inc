@@ -29,5 +29,5 @@ PREFERRED_PROVIDER_virtual/kernel ??= "linux-yocto"
 PREFERRED_VERSION_linux-yocto ?= "6.1%"
 MACHINE_EXTRA_RRECOMMENDS += "linux-firmware-cnm"
 
-NON_MULTILIB_RECIPES:append = " u-boot-ti-staging optee-os trusted-firmware-a ti-rtos-firmware ti-dm-fw ti-eth-fw ti-k3-secdev"
+NON_MULTILIB_RECIPES:append = " u-boot-ti-staging optee-os trusted-firmware-a ti-rtos-firmware ti-dm-fw ti-eth-fw ti-k3-secdev tisdk-uenv"
 
