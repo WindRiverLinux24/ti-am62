@@ -1,0 +1,1 @@
+COMPATIBLE_MACHINE:ti-am62 = "ti-am62"

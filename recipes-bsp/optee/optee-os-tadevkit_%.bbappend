@@ -1,0 +1,2 @@
+COMPATIBLE_MACHINE:ti-am62 = "ti-am62"
+EXTRA_OEMAKE:remove:ti-am62 = "CFG_MAP_EXT_DT_SECURE=y"
