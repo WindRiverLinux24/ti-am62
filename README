@@ -392,3 +392,54 @@ based image classification runtime modules and libraries for above demo testing.
 Running above demo will emit some errors due to the python version mismatch,
 This is as a known issue and will be fixed till TI provides the python3.11 based
 runtime modules and libraries.
+
+
+7. Secure Boot
+==============
+
+TI-AM62AX SoC has ability to support secure boot feature that establishes the root of trust to authenticate and
+protect boot code and data by cryptographic keys during boot up stage.
+
+7.1 Build BSP Project With Secure Boot Feature
+----------------------------------------------
+
+The ti-am62 BSP supports for building secure bootloader image and signed kernel image by adding a below template
+parameter into setup command line.
+	--templates feature/am62-secboot
+
+7.2 Verify Secure Boot Feature
+------------------------------
+
+Refer to section 5.2, deploy the wic file into SD card, and then insert SD card into SD slot of AM62A SKEVM board,
+and then set as SD boot mode, and then power on board. There will be one "Authentication passed" string printed out
+when verifying and decrypting each image contained in bootloader successfully. After all the parts of bootloader image
+are authenticated successfully, customer can enter u-boot command line terminal and then run below commands to verify
+the signed kernel image manually.
+
+	# fatload mmc 1:1 0x90000000 fitImage
+	# run args_mmc
+	# bootm 0x90000000
+
+7.3 Reference
+-------------
+
+If customer wants to study more detailed content about TI-AM62AX SoC, please refer to below link:
+
+ - Processor SDK Linux Software Developer’s Guide
+   https://software-dl.ti.com/processor-sdk-linux/esd/AM62AX/09_01_00/exports/docs/devices/AM62AX/index.html
+ - TISCI User Guide
+   https://software-dl.ti.com/tisci/esd/latest/index.html
+ - AM62Ax Security
+   https://dev.ti.com/tirex/explore/node?node=A__APJc4bijmb2GIaV0J6IAOQ__AM62A-ACADEMY__WeZ9SsL__LATEST
+ - Secure Resources, customer needs to apply for special access rights for expected SoC.
+   https://www.ti.com/mysecuresoftware/
+
+
+Note:
+When testing the secure boot feature, customer needs to use the HS-SE-TIDK device that has been burned the
+TI dummy key into eFuse. If customer only has the type of HS-FS device, it needs to refer below link to
+change the HS-FS device into HS-SE device by burning TI dummy key into eFuse.
+https://dev.ti.com/tirex/explore/node?node=A__AckwZeWUyRjXoljXV4PQJw__AM62A-ACADEMY__WeZ9SsL__LATEST
+It is crucial to emphasize that once the keys are programmed into the SoC eFuses, there is no way to
+revert this action. It's irreversible. Therefore, customers must be absolutely certain about which keys
+are being burned into eFuses. Failure to do so can result in the board becoming permanently unusable.
