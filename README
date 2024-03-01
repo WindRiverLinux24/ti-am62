@@ -331,4 +331,64 @@ the following environment variables need to be set additionally at uboot to appl
 2. Boot from WIC:
  Just modify the uEnv.txt to add with below:
 	name_overlays=k3-am62a7-sk-ethernet-dc01.dtbo
+
+6.9 Camera
+----------
+
+To enable camera connected to the 22-pin FFC connector, enable the sensor overlay at U-boot prompt:
+
+1. Boot from NFS:
+        => tftpboot 0x82000000 Image; tftpboot 0x88000000 dtb
+        => fdt address 0x88000000; fdt resize 0x100000; tftpboot 0x89000000 k3-am62x-sk-csi2-imx219.dtbo;fdt apply 0x89000000;
+        => booti 0x82000000 - 0x88000000
+
+2. Boot from WIC:
+ Just modify the uEnv.txt to add with below:
+        name_overlays=k3-am62x-sk-csi2-imx219.dtbo
+
+6.10 EdgeAI
+-----------
+
+AM62Ax has integrated micro controllers, DSP, and accelerators for neural network, image, vision, and multimedia processing.
+With a few simple steps one can run high performance computer vision and deep learning demos using a live camera and display.
+
+6.10.1 Build Image
+------------------
+	1. Set BB_NO_NETWORK as '0' in ${buildprj}/build/conf/local.conf file.
+
+	2. Enable Video feature, please refer to "6.6.1 Build Image".
+
+	3. Add edgeai & vision-apps & tidl & tiovx related packages, add lines
+	as below to ${buildprj}/build/conf/local.conf:
 	
+	$ cat << _EOF >> conf/local.conf
+WRTEMPLATE = "feature/bsp-extras"
+DISTRO ?= "wrlinux-graphics"
+CUSTOMER_RECIPES:openembedded-layer += 'yaml-cpp'
+CUSTOMER_RECIPES:meta-python += 'python3-yamlloader'
+CUSTOMER_RECIPES:openembedded-layer += 'glm'
+CUSTOMER_RECIPES:meta-edgeai += 'ti-vision-apps ti-tidl edgeai-apps-utils edgeai-tiovx-kernels edgeai-tiovx-modules ti-edgeai-firmware edgeai-tiovx-apps'
+CUSTOMER_RECIPES:meta-edgeai += 'edgeai-gst-apps edgeai-dl-inferer ti-tidl-osrt edgeai-gst-plugins tisdk-edgeai-image edgeai-tidl-models edgeai-test-data ti-gpio-cpp'
+CUSTOMER_RECIPES:meta-ti-bsp += 'devil kms++'
+IMAGE_INSTALL:append:ti-am62 = ' ti-vision-apps-dev ti-tidl-dev edgeai-tiovx-kernels-dev edgeai-tiovx-modules-dev edgeai-tiovx-kernels-source edgeai-tiovx-modules-source edgeai-apps-utils-source ti-edgeai-firmware'
+IMAGE_INSTALL:append:ti-am62 = ' ti-tidl-osrt-dev ti-tidl-osrt-staticdev edgeai-gst-plugins-dev edgeai-dl-inferer-staticdev edgeai-gst-apps-source edgeai-gst-plugins-source edgeai-dl-inferer-source edgeai-tidl-models edgeai-test-data ti-gpio-cpp-source'
+IMAGE_INSTALL:append:ti-am62 = ' devil kms++ python3-pygobject'
+IMAGE_INSTALL:remove:ti-am62 = ' ti-dm-fw'
+_EOF
+
+	4. bitbake wrlinux-image-std-sato
+
+6.10.2 Verify EdgeAI feature
+----------------------------
+	1. Enable IMX219 camera, please refer to "6.9 Camera".
+	2. Run python based image classification demo:
+	   $ cd /opt/edgeai-gst-apps
+	   $ ./init_script.sh
+	   $ ./apps_python/app_edgeai.py configs/image_classification.yaml
+
+Note:
+Since our WRLinux integrates python3.11 by default, TI SDK provides python3.10
+based image classification runtime modules and libraries for above demo testing.
+Running above demo will emit some errors due to the python version mismatch,
+This is as a known issue and will be fixed till TI provides the python3.11 based
+runtime modules and libraries.

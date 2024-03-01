@@ -22,7 +22,7 @@ This BSP supports the following boards:
 2. Change History
 =================
 
-  - 2024/02 (LINUXPG-1989): Wind River Linux 10.23 RCPL7, Standard and Preempt-rt support based on
+  - 2024/02 (LINUXPG-1989): Wind River Linux 10.23 RCPL8, Standard and Preempt-rt support based on
 			    TI SDK ti-processor-sdk-linux-edgeai-am62axx-evm-09_01_00_07
 
 3. BSP Features
@@ -53,6 +53,7 @@ the corresponding h/w features exist.
 	+ HDMI: 1x HDMI Interface
 	+ Audio: TI‘s TLV320AIC3106 Stereo Audio Codec
 	+ Video: Decoder & Encoder
+	+ Camera: 22 Pin Camera flex connector
 
   o Power Mgmt
 	+ Suspend to RAM
@@ -70,7 +71,6 @@ the corresponding h/w features exist.
 ------------------------
 
 The following features are not supported and not validated:
-	x Camera: 22 Pin Camera flex connector
 	x Watchdog: K3 RTI Watchdog
 	x M.2 Key E interface: support for both Wi-Fi and Bluetooth modules
 
