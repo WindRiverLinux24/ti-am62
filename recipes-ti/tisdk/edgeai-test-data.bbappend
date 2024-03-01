@@ -1,0 +1,2 @@
+COMPATIBLE_MACHINE:am62axx-evm = "am62axx-evm"
+SRCREV:am62axx-evm = "43c36d1e1381a718869c0f6242da0648d4ee85e6"
