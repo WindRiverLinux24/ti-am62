@@ -4,6 +4,9 @@
 # All the device trees for am62ax platform
 KERNEL_DEVICETREE_PREFIX = "ti/k3-am62a7 ti/k3-am62x-sk ti/k3-fpdlink"
 
+# Add extra essential overrides
+MACHINEOVERRIDES:prepend = "k3:am62axx:"
+
 # Multiconfig Setting
 BBMULTICONFIG += "k3r5"
 
@@ -25,7 +28,8 @@ SPL_BINARY = "tispl.bin"
 SPL_BINARYNAME = "tispl.bin"
 UBOOT_SUFFIX = "img"
 
-# Kernel signature parameters
+# Enable kernel signature
+UBOOT_SIGN_ENABLE = "1"
 UBOOT_MKIMAGE_DTCOPTS = "-I dts -O dtb"
 UBOOT_SIGN_KEYNAME ?= "custMpk"
 UBOOT_SIGN_KEYDIR ?= "${TI_SECURE_DEV_PKG}/keys"
