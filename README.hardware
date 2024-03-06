@@ -66,6 +66,7 @@ the corresponding h/w features exist.
 	+ Crypto: Crypto acceleration support for AES, SHA256, SHA512 and RNG
 	+ IPC: Communication between A53 and C75, R5F cores
 	+ Thermal: Thermal Management Unit (TMU)
+	+ RTC: Texas Instruments's RTC
 
 3.2 Unsupported Features
 ------------------------
