@@ -42,6 +42,7 @@ the corresponding h/w features exist.
 
   o Network
 	+ CPSW Ethernet: 2x RGMII
+	+ TSN features: PTP/EST/CBS/IET
 
   o Storage
 	+ EMMC: 	16 GB memory MTFC16GAPALBH-IT

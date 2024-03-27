@@ -393,6 +393,158 @@ Running above demo will emit some errors due to the python version mismatch,
 This is as a known issue and will be fixed till TI provides the python3.11 based
 runtime modules and libraries.
 
+6.11 TSN
+--------
+
+TI AM62Ax Common Platform Ethernet Switch (CPSW) supports TSN features such as:
+	1.PTP (Precision Time Protocol) [IEEE-1588, IEEE-802.1AS]
+	2.EST (Enhancements for Scheduled Traffic) [IEEE-802.1Qbv]
+	3.FQTSS/CBS (Credit Based Shaper) [IEEE-802.1Qav]
+	4.IET (Interspersing Express Traffic) [IEEE-802.3br, IEEE-802.1Qbu]
+
+To get more details about TSN feature, please refer to instructions mentioned in the sections
+"3.2.2.8.3.2. TSN with CPSW" in the web link user manual of PROCESSOR-SDK-LINUX-AM62A.
+
+The following will provide a simple test demo for each TSN feature. Their test environment is
+to directly connect two AM62AX SK EVM boards through eth0 port, one as the master and the other as the slave.
+
+6.11.1 PTP
+----------
+
+In both AM62AX SK EVM boards, create a config file named ptp.cfg whose contents are as follows:
+[global]
+tx_timestamp_timeout 400
+
+1. Run the following on master target:
+	# ptp4l -E -2 -H -i eth0 -l 6 -m -q -f ptp.cfg
+
+2. Run the following on slave target:
+	# ptp4l -E -2 -H -i eth0 -s -l 6 -m -q -f ptp.cfg
+
+6.11.2 EST
+----------
+
+1. Run the following on slave target:
+	# while sleep 1; do plget -m rx-lat -f ipgap -n 128 -i eth0 -t ptpl2 -f hwts; done
+
+2. Create the below script and run on master target:
+#!/bin/sh
+
+# AM62A CPSW Port-0
+ifconfig eth0 down
+ethtool -L eth0 tx 3
+ethtool --set-priv-flags eth0 p0-rx-ptype-rrobin off
+ifconfig eth0 up
+sleep 30
+
+#sync system time to CPSW CPTS
+phc2sys -s CLOCK_REALTIME -c eth0 -m -O 0 > /dev/null &
+
+#calc base_time as now + 2min, give it time to sync
+base=$(((`date +%s` + 2 * 60)*1000000000))
+
+tc qdisc replace dev eth0 parent root handle 100 taprio \
+    num_tc 3 \
+    map 0 0 1 2 0 0 0 0 0 0 0 0 0 0 0 0 \
+    queues 1@0 1@1 1@2 \
+    base-time $base \
+    sched-entry S 4 125000 \
+    sched-entry S 2 125000 \
+    sched-entry S 1 250000 \
+    flags 2
+
+tc qdisc add dev eth0 clsact
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5001 0xffff action skbedit priority 3
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5002 0xffff action skbedit priority 2
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5003 0xffff action skbedit priority 1
+tc qdisc show dev eth0
+
+# Wait for 2 minutes for sync to complete
+sleep 120
+
+# NOTE: Replace 1c:63:49:17:24:ae with the MAC address of eth0 of slave AM62AX EVM
+plget -i eth0 -m pkt-gen -p 3 -t ptpl2 -n 128 -a 1c:63:49:17:24:ae -l 1500
+sleep 5
+plget -i eth0 -m pkt-gen -p 2 -t ptpl2 -n 128 -a 1c:63:49:17:24:ae -l 1500
+sleep 5
+plget -i eth0 -m pkt-gen -p 1 -t ptpl2 -n 128 -a 1c:63:49:17:24:ae -l 1500
+
+6.11.3 CBS
+----------
+
+1. Create the below script and run on master target:
+#!/bin/sh
+
+ifconfig eth0 down
+ethtool -L eth0  tx 8
+ifconfig eth0 up
+ifconfig eth0 192.168.1.1
+
+sleep 10
+
+tc qdisc replace dev eth0 handle 100: parent root mqprio num_tc 3 \
+map 0 0 0 0 0 0 1 2 0 0 0 0 0 0 0 0 queues 1@0 1@6 1@7 hw 0
+
+echo 106 > /sys/class/net/eth0/queues/tx-7/tx_maxrate
+echo 212 > /sys/class/net/eth0/queues/tx-6/tx_maxrate
+
+tc qdisc add dev eth0 clsact
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5001 0xffff action skbedit priority 7
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5002 0xffff action skbedit priority 6
+
+iperf3 -c 192.168.1.2 -t10 -p5001 -Tpri7 & \
+iperf3 -c 192.168.1.2 -t10 -p5002 -Tpri6 & \
+iperf3 -c 192.168.1.2 -t10 -p5003 -Tpri0
+
+2. Create the below script and run on slave target:
+ifconfig eth0 192.168.1.2
+iperf3 -s -p 5001&
+iperf3 -s -p 5002&
+iperf3 -s -p 5003&
+
+6.11.4 IET
+----------
+
+1. Create the below script and run on master target:
+#!/bin/sh
+
+ifconfig eth0 down
+ethtool -L eth0 tx 2
+ethtool --set-priv-flags eth0 p0-rx-ptype-rrobin off
+ethtool --set-priv-flags eth0 iet-frame-preemption on
+ethtool --set-priv-flags eth0 iet-mac-verify on
+ifconfig eth0 up
+sleep 5
+
+iperf3 -s -i30 -p5002&
+iperf3 -s -i30 -p5003&
+ifconfig eth0 192.168.100.30
+
+2. Create the below script and run on slave target:
+#!/bin/sh
+
+ifconfig eth0 down
+ethtool -L eth0 tx 2
+ethtool --set-priv-flags eth0 p0-rx-ptype-rrobin off
+ethtool --set-priv-flags eth0 iet-frame-preemption on
+ethtool --set-priv-flags eth0 iet-mac-verify on
+ifconfig eth0 up
+sleep 5
+
+tc qdisc replace dev eth0 handle 100: parent root mqprio \
+    num_tc 2 \
+    map 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 \
+    queues 1@0 1@1 \
+    hw 0
+
+tc -g class show dev eth0
+tc qdisc add dev eth0 clsact
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5002 0xffff action skbedit priority 2
+tc filter add dev eth0 egress protocol ip prio 1 u32 match ip dport 5003 0xffff action skbedit priority 3
+ip addr add 192.168.100.20/24 dev eth0
+sleep 2
+iperf3 -c 192.168.100.30 -u -b200M -l1472 -u -t30 -i30 -p5002&
+iperf3 -c 192.168.100.30 -u -b50M -l1472 -u -t30 -i30 -p5003&
 
 7. Secure Boot
 ==============
