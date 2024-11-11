@@ -152,36 +152,14 @@ information about WIC:
 
 https://docs.yoctoproject.org/singleindex.html#creating-partitioned-images-using-wic
 
-5.1 Build WIC image within tiboot3.bin & tispl.bin in boot partition
---------------------------------------------------------------------
-
-tiboot3.bin & tispl.bin are the firmwares of TI's MCU. Because of license issue,
-they aren't integrated into WRLinux.
-
-the installation file "ti-processor-sdk-linux-edgeai-am62axx-evm-09_01_00_07-Linux-x86-Install.bin"
-includes the two firmwares, the installation file can be downloaded from website:
-https://www.ti.com/tool/download/PROCESSOR-SDK-LINUX-AM62A
-
-And then add one line below to local.conf:
-
-IMAGE_BOOT_FILES:append = " <path-to-tiboot3.bin>/tiboot3.bin;tiboot3.bin <path-to-tispl.bin>/tispl.bin;tispl.bin"
-
-After having built your project, a partitioned WIC image will be created in the
-deploy folder as follows:
-
-  path_to_your_project/build/tmp-glibc/deploy/images/ti-am62/wrlinux-image-<rootfs_type>-ti-am62.wic
-
-There are two partitions in this WIC images, the first one is to hold the boot
-images, the second is the related root file system.
-
-5.2 Deploy the created WIC image
+5.1 Deploy the created WIC image
 --------------------------------
 
 Deploy the created WIC image into SD card(/dev/sdx) in your host machine.
 
    $ sudo dd if=wrlinux-image-<rootfs_type>-<machine>.wic of=/dev/sdx
 
-5.3 Boot the board from the WIC SD card
+5.2 Boot the board from the WIC SD card
 ---------------------------------------
 
 Insert the SD card into the board and select this SD card as the boot device.
