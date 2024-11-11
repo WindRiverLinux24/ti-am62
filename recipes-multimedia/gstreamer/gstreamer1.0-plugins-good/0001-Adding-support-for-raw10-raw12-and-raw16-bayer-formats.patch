@@ -7,7 +7,6 @@ sensors that support raw10, raw12 or raw16 to be used with v4l2src.
 Will need to be carried in meta-psdkla as long as we are using Gstreamer 1.16
 
 Upstream-Status: Pending
-
 Signed-off-by: Limaye, Aniket <a-limaye@ti.com>
 Signed-off-by: Xulin Sun <xulin.sun@windriver.com>
 
