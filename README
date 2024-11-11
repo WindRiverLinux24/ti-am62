@@ -8,9 +8,11 @@ Please refer to README.hardware for hardware specific information.
 
 Dependencies
 ------------
-This layer depends on the oe-core version supplied with Wind River Linux
-and the wr-kernel layer.
-
+This layer depends on the following layers supplied with Wind River Linux:
+	oe-core
+	wrlinux
+	meta-ti
+	meta-edgeai
 
 Maintenance
 -----------
@@ -199,7 +201,7 @@ release note "Processor SDK Linux for AM62A" from the TI web.
 6.2.1 Usage and verification
 ----------------------------
 
-        # rtcwake -s 10 -m mem -d rtc1
+        # rtcwake -s 10 -m mem -d rtc0
 
 6.3 PM cpufreq
 --------------
@@ -308,7 +310,7 @@ the following environment variables need to be set additionally at uboot to appl
 
 2. Boot from WIC:
  Just modify the uEnv.txt to add with below:
-	name_overlays=k3-am62a7-sk-ethernet-dc01.dtbo
+	name_overlays=ti/k3-am62a7-sk-ethernet-dc01.dtbo
 
 6.9 Camera
 ----------
@@ -322,7 +324,7 @@ To enable camera connected to the 22-pin FFC connector, enable the sensor overla
 
 2. Boot from WIC:
  Just modify the uEnv.txt to add with below:
-        name_overlays=k3-am62x-sk-csi2-imx219.dtbo
+        name_overlays=ti/k3-am62x-sk-csi2-imx219.dtbo
 
 6.10 EdgeAI
 -----------
@@ -361,15 +363,12 @@ _EOF
 	1. Enable IMX219 camera, please refer to "6.9 Camera".
 	2. Run python based image classification demo:
 	   $ cd /opt/edgeai-gst-apps
+	   $ sed -i '43s/lib/lib64/' init_script.sh
 	   $ ./init_script.sh
 	   $ ./apps_python/app_edgeai.py configs/image_classification.yaml
 
-Note:
-Since our WRLinux integrates python3.11 by default, TI SDK provides python3.10
-based image classification runtime modules and libraries for above demo testing.
-Running above demo will emit some errors due to the python version mismatch,
-This is as a known issue and will be fixed till TI provides the python3.11 based
-runtime modules and libraries.
+Note: more testing demos, you can refer to the guide document "Edge AI user guide"
+in the TI web site.
 
 6.11 TSN
 --------
@@ -381,10 +380,12 @@ TI AM62Ax Common Platform Ethernet Switch (CPSW) supports TSN features such as:
 	4.IET (Interspersing Express Traffic) [IEEE-802.3br, IEEE-802.1Qbu]
 
 To get more details about TSN feature, please refer to instructions mentioned in the sections
-"3.2.2.8.3.2. TSN with CPSW" in the web link user manual of PROCESSOR-SDK-LINUX-AM62A.
+"3.2.2.10.3.2. TSN with CPSW" in the web link user manual of PROCESSOR-SDK-LINUX-AM62A.
 
 The following will provide a simple test demo for each TSN feature. Their test environment is
 to directly connect two AM62AX SK EVM boards through eth0 port, one as the master and the other as the slave.
+
+Note: the below 'eth0' should be replaed with your own Ethernet port name.
 
 6.11.1 PTP
 ----------
@@ -487,10 +488,9 @@ iperf3 -s -p 5003&
 #!/bin/sh
 
 ifconfig eth0 down
-ethtool -L eth0 tx 2
+ethtool -L eth0 tx 4
 ethtool --set-priv-flags eth0 p0-rx-ptype-rrobin off
-ethtool --set-priv-flags eth0 iet-frame-preemption on
-ethtool --set-priv-flags eth0 iet-mac-verify on
+ethtool --set-mm eth0 pmac-enabled on tx-enabled on verify-enabled on verify-time 10 tx-min-frag-size 124
 ifconfig eth0 up
 sleep 5
 
@@ -502,18 +502,19 @@ ifconfig eth0 192.168.100.30
 #!/bin/sh
 
 ifconfig eth0 down
-ethtool -L eth0 tx 2
+ethtool -L eth0 tx 4
 ethtool --set-priv-flags eth0 p0-rx-ptype-rrobin off
-ethtool --set-priv-flags eth0 iet-frame-preemption on
-ethtool --set-priv-flags eth0 iet-mac-verify on
+ethtool --set-mm eth0 pmac-enabled on tx-enabled on verify-enabled on verify-time 10 tx-min-frag-size 124
 ifconfig eth0 up
 sleep 5
 
 tc qdisc replace dev eth0 handle 100: parent root mqprio \
-    num_tc 2 \
-    map 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 \
-    queues 1@0 1@1 \
-    hw 0
+    num_tc 4 \
+    map 0 1 2 3 \
+    queues 1@0 1@1 1@2 1@3 \
+    hw 1 \
+    mode dcb \
+    fp P P P E
 
 tc -g class show dev eth0
 tc qdisc add dev eth0 clsact

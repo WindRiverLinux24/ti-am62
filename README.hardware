@@ -22,8 +22,8 @@ This BSP supports the following boards:
 2. Change History
 =================
 
-  - 2024/02 (LINUXPG-1989): Wind River Linux 10.23 RCPL8, Standard and Preempt-rt support based on
-			    TI SDK ti-processor-sdk-linux-edgeai-am62axx-evm-09_01_00_07
+  - 2024/12 (LINUXPG-2455): Wind River Linux 10.24 RCPL4, Standard and Preempt-rt support based on
+			    TI SDK ti-processor-sdk-linux-edgeai-am62axx-evm-10_00_00_08
 
 3. BSP Features
 ===============
@@ -91,4 +91,4 @@ in a different environment it may possibly have some issues.
 	Processor:		AM62AX SR1.0 HS-FS
 	Board:		        Texas Instruments AM62A7 SK
 	BootLoader:		U-Boot
-	BootLoader Version:	U-Boot 2023.04-gb0d717b732 (Dec 06 2023 - 15:11:45 +0000)
+	BootLoader Version:	U-Boot 2024.04-ti-g7986fd679935 (Aug 08 2024 - 17:51:24 +0000)
