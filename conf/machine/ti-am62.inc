@@ -26,6 +26,8 @@ do_image[mcdepends] += "mc::k3r5:u-boot-ti-staging:do_deploy"
 KERNEL_DTBDEST = "${KERNEL_IMAGEDEST}/dtb"
 KERNEL_DTBVENDORED = "1"
 
+PREFERRED_VERSION_u-boot-ti-staging ?= "2024.04%"
+
 # multilib support
 MULTILIBS ?= "multilib:lib32"
 DEFAULTTUNE:virtclass-multilib-lib32 ?= "armv7athf-neon"
