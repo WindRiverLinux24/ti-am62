@@ -1,5 +1,7 @@
 COMPATIBLE_MACHINE:am62axx-evm = "am62axx-evm"
 
+DEPENDS += "ti-dm-fw"
+
 FW_DIR:am62axx-evm = "${PLAT_SFX}/vision_apps_eaik"
 INSTALL_FW_DIR:am62axx-evm = "${nonarch_base_libdir}/firmware/vision_apps_eaik/"
 
